@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DramaBox - Streaming Drama Pendek</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-play-circle"></i>
+                <h1>DramaBox</h1>
+            </div>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Cari drama..." class="search-input">
+                <button id="searchBtn" class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <h2>Drama Pendek Terbaru</h2>
+                <p>Nikmati koleksi drama pendek terbaik dengan kualitas HD</p>
+            </section>
+
+            <!-- Loading -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Memuat drama...</p>
+            </div>
+
+            <!-- Search Results -->
+            <section id="searchResults" class="search-results" style="display: none;">
+                <h3>Hasil Pencarian</h3>
+                <div id="searchGrid" class="drama-grid"></div>
+            </section>
+
+            <!-- Latest Dramas -->
+            <section id="latestSection" class="latest-section">
+                <h3>Drama Terbaru</h3>
+                <div id="dramaGrid" class="drama-grid"></div>
+                <div class="pagination">
+                    <button id="prevPage" class="page-btn" disabled>
+                        <i class="fas fa-chevron-left"></i> Sebelumnya
+                    </button>
+                    <span id="pageInfo" class="page-info">Halaman 1</span>
+                    <button id="nextPage" class="page-btn">
+                        Selanjutnya <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Drama Title</h3>
+                <button id="closeModal" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="video-container">
+                    <video id="videoPlayer" controls>
+                        <source src="" type="video/mp4">
+                        Browser Anda tidak mendukung pemutar video.
+                    </video>
+                </div>
+                <div class="episode-list">
+                    <h4>Daftar Episode</h4>
+                    <div id="episodeList" class="episodes"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 DramaBox. Semua hak dilindungi.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
