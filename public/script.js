@@ -274,6 +274,7 @@ class DramaBoxApp {
     }
 
     showError(message) {
+    }
     showError(message, type = 'error') {
         const bgColor = type === 'success' ? '#4CAF50' : '#ff4757';
         const errorDiv = document.createElement('div');
