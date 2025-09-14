@@ -48,6 +48,66 @@ class DramaBoxApp {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') this.closeModal();
         });
+
+        // Add token refresh button (for debugging)
+        this.addTokenControls();
+    }
+
+    addTokenControls() {
+        // Add token info display (only in development)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            const tokenControls = document.createElement('div');
+            tokenControls.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 10px;
+                border-radius: 8px;
+                font-size: 12px;
+                z-index: 1000;
+            `;
+            tokenControls.innerHTML = `
+                <div>Token Status: <span id="tokenStatus">Loading...</span></div>
+                <button onclick="app.refreshToken()" style="margin-top: 5px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer;">
+                    Refresh Token
+                </button>
+            `;
+            document.body.appendChild(tokenControls);
+            
+            // Update token status periodically
+            this.updateTokenStatus();
+            setInterval(() => this.updateTokenStatus(), 30000); // Every 30 seconds
+        }
+    }
+
+    async updateTokenStatus() {
+        try {
+            const response = await fetch('/api/token/info');
+            const info = await response.json();
+            const statusElement = document.getElementById('tokenStatus');
+            if (statusElement) {
+                statusElement.textContent = info.hasToken ? 
+                    (info.isExpired ? 'Expired' : 'Valid') : 'None';
+                statusElement.style.color = info.hasToken && !info.isExpired ? '#4CAF50' : '#f44336';
+            }
+        } catch (error) {
+            console.error('Failed to get token status:', error);
+        }
+    }
+
+    async refreshToken() {
+        try {
+            const response = await fetch('/api/token/refresh', { method: 'POST' });
+            const result = await response.json();
+            console.log('Token refreshed:', result);
+            this.updateTokenStatus();
+            this.showError('Token berhasil diperbarui!', 'success');
+        } catch (error) {
+            console.error('Failed to refresh token:', error);
+            this.showError('Gagal memperbarui token.');
+        }
     }
 
     showLoading() {
@@ -214,22 +274,24 @@ class DramaBoxApp {
     }
 
     showError(message) {
+    showError(message, type = 'error') {
+        const bgColor = type === 'success' ? '#4CAF50' : '#ff4757';
         const errorDiv = document.createElement('div');
         errorDiv.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #ff4757;
+            background: ${bgColor};
             color: white;
             padding: 1rem 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             z-index: 1001;
             animation: slideIn 0.3s ease;
         `;
         errorDiv.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-exclamation-triangle"></i>
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
                 <span>${message}</span>
             </div>
         `;

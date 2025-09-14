@@ -1,13 +1,11 @@
-import axios from "axios";
+import { token as generateToken } from './lib/token-generator.js';
 
-// function getToken() {
 const token = async () => {
     try {
-    const res = await axios.get("https://dramabox-token.vercel.app/token");
-    return res.data;
+        return await generateToken();
     } catch (error) {
-    throw error;
-}
+        throw error;
+    }
 }
 
 export { token };

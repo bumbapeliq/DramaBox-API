@@ -3,7 +3,8 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { token } from './get-token.js';
-import axios from 'axios';
+import { refreshToken, getTokenInfo } from './lib/token-generator.js';
+import apiClient from './lib/api-client.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,40 +16,34 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Token management routes
+app.get('/api/token/info', (req, res) => {
+  try {
+    const info = getTokenInfo();
+    res.json(info);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get token info' });
+  }
+});
+
+app.post('/api/token/refresh', async (req, res) => {
+  try {
+    const newToken = await refreshToken();
+    res.json({ 
+      message: 'Token refreshed successfully',
+      token: newToken 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to refresh token' });
+  }
+});
+
 // API Routes
 app.get('/api/latest', async (req, res) => {
   try {
-    const gettoken = await token();
-    const url = "https://sapi.dramaboxdb.com/drama-box/he001/theater";
-
-    const headers = {
-      "User-Agent": "okhttp/4.10.0",
-      "Accept-Encoding": "gzip",
-      "Content-Type": "application/json",
-      "tn": `Bearer ${gettoken.token}`,
-      "version": "430",
-      "vn": "4.3.0",
-      "cid": "DRA1000042",
-      "package-name": "com.storymatrix.drama",
-      "apn": "1",
-      "device-id": gettoken.deviceid,
-      "language": "in",
-      "current-language": "in",
-      "p": "43",
-      "time-zone": "+0800",
-      "content-type": "application/json; charset=UTF-8"
-    };
-
-    const data = {
-      newChannelStyle: 1,
-      isNeedRank: 1,
-      pageNo: parseInt(req.query.page) || 1,
-      index: 1,
-      channelId: 43
-    };
-
-    const response = await axios.post(url, data, { headers });
-    res.json(response.data.data.newTheaterList.records);
+    const pageNo = parseInt(req.query.page) || 1;
+    const dramas = await apiClient.getLatestDramas(pageNo);
+    res.json(dramas);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch latest dramas' });
@@ -62,30 +57,8 @@ app.get('/api/search', async (req, res) => {
       return res.status(400).json({ error: 'Keyword is required' });
     }
 
-    const gettoken = await token();
-    const url = "https://sapi.dramaboxdb.com/drama-box/search/suggest";
-
-    const headers = {
-      "User-Agent": "okhttp/4.10.0",
-      "Accept-Encoding": "gzip",
-      "Content-Type": "application/json",
-      "tn": `Bearer ${gettoken.token}`,
-      "version": "430",
-      "vn": "4.3.0",
-      "cid": "DRA1000042",
-      "package-name": "com.storymatrix.drama",
-      "apn": "1",
-      "device-id": gettoken.deviceid,
-      "language": "in",
-      "current-language": "in",
-      "p": "43",
-      "time-zone": "+0800",
-      "content-type": "application/json; charset=UTF-8"
-    };
-
-    const data = { keyword };
-    const response = await axios.post(url, data, { headers });
-    res.json(response.data.data.suggestList);
+    const dramas = await apiClient.searchDramas(keyword);
+    res.json(dramas);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to search dramas' });
@@ -95,44 +68,7 @@ app.get('/api/search', async (req, res) => {
 app.get('/api/stream/:bookId/:episode', async (req, res) => {
   try {
     const { bookId, episode } = req.params;
-    const gettoken = await token();
-    const url = "https://sapi.dramaboxdb.com/drama-box/chapterv2/batch/load";
-
-    const headers = {
-      "User-Agent": "okhttp/4.10.0",
-      "Accept-Encoding": "gzip",
-      "Content-Type": "application/json",
-      "tn": `Bearer ${gettoken.token}`,
-      "version": "430",
-      "vn": "4.3.0",
-      "cid": "DRA1000000",
-      "package-name": "com.storymatrix.drama",
-      "apn": "1",
-      "device-id": gettoken.deviceid,
-      "language": "in",
-      "current-language": "in",
-      "p": "43",
-      "time-zone": "+0800",
-      "content-type": "application/json; charset=UTF-8"
-    };
-
-    const data = {
-      boundaryIndex: 0,
-      comingPlaySectionId: -1,
-      index: parseInt(episode),
-      currencyPlaySource: "discover_new_rec_new",
-      needEndRecommend: 0,
-      currencyPlaySourceName: "",
-      preLoad: false,
-      rid: "",
-      pullCid: "",
-      loadDirection: 0,
-      startUpKey: "",
-      bookId: bookId
-    };
-
-    const response = await axios.post(url, data, { headers });
-    const chapterList = response.data.data.chapterList;
+    const chapterList = await apiClient.getStreamLink(bookId, episode);
     
     if (chapterList && chapterList.length > 0) {
       res.json({
